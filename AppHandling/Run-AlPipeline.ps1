@@ -1518,6 +1518,7 @@ Measure-Command {
 Write-GroupEnd
 }
 
+Write-Host "----------------------------- Checking for missing app dependencies ---------------------------------"
 if ($InstallMissingDependencies) {
 $installedApps = @(GetInstalledApps -bcAuthContext $bcAuthContext -environment $environment -useCompilerFolder $useCompilerFolder -filesOnly $filesOnly -packagesFolder $packagesFolder)
 if ($installedApps) {
@@ -1713,6 +1714,7 @@ Write-GroupEnd
 }
 }
 
+Write-Host "--------------------------------- Checking for missing test app dependencies---------------------------------"
 if ((($testCountry) -or !($appFolders -or $testFolders -or $bcptTestFolders)) -and ($InstallMissingDependencies)) {
 $installedApps = @(GetInstalledApps -bcAuthContext $bcAuthContext -environment $environment -useCompilerFolder $useCompilerFolder -filesOnly $filesOnly -compilerFolder (GetCompilerFolder) -packagesFolder $packagesFolder)
 if ($installedApps) {
