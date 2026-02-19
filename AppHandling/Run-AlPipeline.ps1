@@ -1452,23 +1452,15 @@ Measure-Command {
             }
         }
         elseif (!$testCountry -and ($useCompilerFolder -or ($filesOnly -and (-not $bcAuthContext)))) {
-            $tmpFolder = Join-Path ([System.IO.Path]::GetTempPath()) ([Guid]::NewGuid().ToString())
-            New-Item -Path $tmpFolder -ItemType Directory | Out-Null
-            CopyAppFilesToFolder -appfiles $_ -folder $tmpFolder | ForEach-Object {
-                $appid = (Get-AppJsonFromAppFile -appFile $_).id
-                if ((!$installOnlyReferencedApps) -or ($missingAppDependencies -contains $appId)) {
-                    $fname = [System.IO.Path]::GetFileName($_)
-                    $appsBeforeApps += @((Join-Path $packagesFolder $fname))
-                    Write-Host -NoNewline "Copying $fname to symbols folder"
-                    Copy-Item -Path $_ -Destination $packagesFolder -Force
-                    if ($generateDependencyArtifact) {
-                        Write-Host -NoNewline " and dependencies folder"
-                        Copy-Item -Path $_ -Destination $dependenciesFolder -Force
-                    }
-                    Write-Host
+            CopyAppFilesToFolder -appfiles $_ -folder $packagesFolder | ForEach-Object {
+                $appsBeforeApps += @($_)
+                Write-Host -NoNewline "Copying $($_.SubString($packagesFolder.Length+1)) to symbols folder"
+                if ($generateDependencyArtifact) {
+                    Write-Host -NoNewline " and dependencies folder"
+                    Copy-Item -Path $_ -Destination $dependenciesFolder -Force
                 }
+                Write-Host
             }
-            Remove-Item -Path $tmpFolder -Recurse -Force
         }
         else {
             $tmpAppFiles += @(CopyAppFilesToFolder -appfiles $_ -folder $tmpAppFolder)
@@ -1518,7 +1510,6 @@ Measure-Command {
 Write-GroupEnd
 }
 
-Write-Host "----------------------------- Checking for missing app dependencies ---------------------------------"
 if ($InstallMissingDependencies) {
 $installedApps = @(GetInstalledApps -bcAuthContext $bcAuthContext -environment $environment -useCompilerFolder $useCompilerFolder -filesOnly $filesOnly -packagesFolder $packagesFolder)
 if ($installedApps) {
@@ -1664,17 +1655,9 @@ Measure-Command {
             }
         }
         elseif (!$testCountry -and ($useCompilerFolder -or ($filesOnly -and (-not $bcAuthContext)))) {
-            $tmpFolder = Join-Path ([System.IO.Path]::GetTempPath()) ([Guid]::NewGuid().ToString())
-            New-Item -Path $tmpFolder -ItemType Directory | Out-Null
-            CopyAppFilesToFolder -appfiles "$_".Trim('()') -folder $tmpFolder | ForEach-Object {
-                $appid = (Get-AppJsonFromAppFile -appFile $_).id
-                if ((!$installOnlyReferencedApps) -or ($missingAppDependencies -contains $appId)) {
-                    $fname = [System.IO.Path]::GetFileName($_)
-                    $appsBeforeTestApps += @((Join-Path $packagesFolder $fname))
-                    Write-Host "Copying $fname to symbols folder"
-                }
+            CopyAppFilesToFolder -appfiles "$_".Trim('()') -folder $packagesFolder | ForEach-Object {
+                $appsBeforeTestApps += @($_)
             }
-            Remove-Item -Path $tmpFolder -Recurse -Force
         }
         else {
             $tmpAppFiles += @(CopyAppFilesToFolder -appfiles "$_".Trim('()') -folder $tmpAppFolder)
@@ -1714,7 +1697,6 @@ Write-GroupEnd
 }
 }
 
-Write-Host "--------------------------------- Checking for missing test app dependencies---------------------------------"
 if ((($testCountry) -or !($appFolders -or $testFolders -or $bcptTestFolders)) -and ($InstallMissingDependencies)) {
 $installedApps = @(GetInstalledApps -bcAuthContext $bcAuthContext -environment $environment -useCompilerFolder $useCompilerFolder -filesOnly $filesOnly -compilerFolder (GetCompilerFolder) -packagesFolder $packagesFolder)
 if ($installedApps) {
