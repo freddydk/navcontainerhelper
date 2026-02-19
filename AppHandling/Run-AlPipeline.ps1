@@ -1453,13 +1453,16 @@ Measure-Command {
         }
         elseif (!$testCountry -and ($useCompilerFolder -or ($filesOnly -and (-not $bcAuthContext)))) {
             CopyAppFilesToFolder -appfiles $_ -folder $packagesFolder | ForEach-Object {
-                $appsBeforeApps += @($_)
-                Write-Host -NoNewline "Copying $($_.SubString($packagesFolder.Length+1)) to symbols folder"
-                if ($generateDependencyArtifact) {
-                    Write-Host -NoNewline " and dependencies folder"
-                    Copy-Item -Path $_ -Destination $dependenciesFolder -Force
+                $appid = (Get-AppJsonFromAppFile -appFile $_).id
+                if ((!$installOnlyReferencedApps) -or ($missingAppDependencies -contains $appId)) {
+                    $appsBeforeApps += @($_)
+                    Write-Host -NoNewline "Copying $($_.SubString($packagesFolder.Length+1)) to symbols folder"
+                    if ($generateDependencyArtifact) {
+                        Write-Host -NoNewline " and dependencies folder"
+                        Copy-Item -Path $_ -Destination $dependenciesFolder -Force
+                    }
+                    Write-Host
                 }
-                Write-Host
             }
         }
         else {
